@@ -1959,5 +1959,45 @@ function showResults() {
 window.addEventListener('load', function() {
     console.log('Oyun başlıyor...');
     console.log('Canvas:', canvas.width, 'x', canvas.height);
+    
+    // Mobil cihazda tam ekran iste
+    requestFullscreen();
+    
+    // Ekran yönüne kilitlenme (landscape)
+    lockScreenOrientation();
+    
     gameLoop();
 });
+
+// Tam ekran iste
+function requestFullscreen() {
+    const elem = document.documentElement;
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen().catch(() => {
+            // Tam ekran hatası - sessizce yoksay
+        });
+    } else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen().catch(() => {});
+    } else if (elem.mozRequestFullScreen) {
+        elem.mozRequestFullScreen().catch(() => {});
+    } else if (elem.msRequestFullscreen) {
+        elem.msRequestFullscreen().catch(() => {});
+    }
+}
+
+// Ekran yönüne kilitlenme
+function lockScreenOrientation() {
+    if (screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('landscape').catch(() => {
+            // Yönlendirme kilit hatası - sessizce yoksay
+        });
+    } else if (screen.lockOrientation) {
+        screen.lockOrientation('landscape');
+    } else if (screen.mozLockOrientation) {
+        screen.mozLockOrientation('landscape');
+    } else if (screen.msLockOrientation) {
+        screen.msLockOrientation('landscape');
+    } else if (screen.webkitLockOrientation) {
+        screen.webkitLockOrientation('landscape');
+    }
+}
