@@ -905,30 +905,34 @@ function drawGenericDecisionWindow(leftTitle, leftSubtitle, leftList, leftColor,
     ctx.textBaseline = 'alphabetic';
 
     ctx.fillStyle = '#ffffff';
-    const titleSize = isMobile ? Math.max(20, canvas.width * 0.06) : 34;
+    const titleSize = isMobile ? Math.max(18, canvas.width * 0.05) : 34;
     ctx.font = `600 ${titleSize}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
-    ctx.fillText('Otonom Araç   Fren Arızası', cx, cy - 200);
+    const titleY = isMobile ? cy - 160 : cy - 200;
+    ctx.fillText('Otonom Araç   Fren Arızası', cx, titleY);
 
     ctx.fillStyle = '#d1d5db';
-    const subtitleSize = isMobile ? Math.max(14, canvas.width * 0.04) : 18;
+    const subtitleSize = isMobile ? Math.max(12, canvas.width * 0.035) : 18;
     ctx.font = `${subtitleSize}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
-    ctx.fillText('Araç duramıyor. Bir karar vermelisin.', cx, cy - 160);
+    const subtitleY = isMobile ? cy - 130 : cy - 160;
+    ctx.fillText('Araç duramıyor. Bir karar vermelisin.', cx, subtitleY);
 
     // Kart ölçüleri
-    let cardW, cardH, gap;
+    let cardW, cardH, gap, cardY;
     if (isMobile) {
-        cardW = Math.min(canvas.width * 0.45, 280);
-        cardH = Math.min(canvas.height * 0.35, 250);
-        gap = canvas.width * 0.04;
+        cardW = Math.min(canvas.width * 0.42, 200);
+        cardH = Math.min(canvas.height * 0.3, 180);
+        gap = canvas.width * 0.02;
+        cardY = cy - 30; // Kartları biraz yukarı
     } else {
         cardW = Math.min(520, Math.max(320, canvas.width * 0.32));
         cardH = 300;
         gap = Math.min(100, Math.max(40, canvas.width * 0.06));
+        cardY = cy - cardH / 2;
     }
 
     drawChoiceCard(
         cx - cardW - gap / 2,
-        cy - cardH / 2,
+        cardY,
         cardW,
         cardH,
         leftTitle,
@@ -940,7 +944,7 @@ function drawGenericDecisionWindow(leftTitle, leftSubtitle, leftList, leftColor,
 
     drawChoiceCard(
         cx + gap / 2,
-        cy - cardH / 2,
+        cardY,
         cardW,
         cardH,
         rightTitle,
