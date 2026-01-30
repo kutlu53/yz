@@ -784,6 +784,7 @@ function drawHomeless(x, y) {
 function drawDecisionWindow() {
     const cx = canvas.width / 2;
     const cy = canvas.height / 2;
+    const isMobile = canvas.width < 600;
 
     // Arka plan karartma
     ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
@@ -794,17 +795,26 @@ function drawDecisionWindow() {
     ctx.textBaseline = 'alphabetic';
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = '600 34px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    const titleSize = isMobile ? Math.max(20, canvas.width * 0.06) : 34;
+    ctx.font = `600 ${titleSize}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
     ctx.fillText('Otonom Araç   Fren Arızası', cx, cy - 200);
 
     ctx.fillStyle = '#d1d5db';
-    ctx.font = '18px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    const subtitleSize = isMobile ? Math.max(14, canvas.width * 0.04) : 18;
+    ctx.font = `${subtitleSize}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
     ctx.fillText('Araç duramıyor. Bir karar vermelisin.', cx, cy - 160);
 
     // Kart ölçüleri (ekrana göre)
-    const cardW = Math.min(520, Math.max(320, canvas.width * 0.32));
-    const cardH = 300;
-    const gap = Math.min(100, Math.max(40, canvas.width * 0.06));
+    let cardW, cardH, gap;
+    if (isMobile) {
+        cardW = Math.min(canvas.width * 0.45, 280);
+        cardH = Math.min(canvas.height * 0.35, 250);
+        gap = canvas.width * 0.04;
+    } else {
+        cardW = Math.min(520, Math.max(320, canvas.width * 0.32));
+        cardH = 300;
+        gap = Math.min(100, Math.max(40, canvas.width * 0.06));
+    }
 
     drawChoiceCard(
         cx - cardW - gap / 2,
@@ -814,7 +824,8 @@ function drawDecisionWindow() {
         'Sol Taraf',
         'Kurallara uyan yayalar',
         ['👴 👴 2 yaşlı erkek', '👵 1 yaşlı kadın', '👨 1 yetişkin erkek'],
-        '#16a34a'
+        '#16a34a',
+        isMobile
     );
 
     drawChoiceCard(
@@ -825,12 +836,14 @@ function drawDecisionWindow() {
         'Sağ Taraf',
         'Kural ihlali yapanlar',
         ['👨 👨 2 erkek', '👩 1 kadın', '👧 1 çocuk'],
-        '#dc2626'
+        '#dc2626',
+        isMobile
     );
 
     // Alt ipucu
     ctx.fillStyle = '#9ca3af';
-    ctx.font = '15px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    const hintSize = isMobile ? Math.max(12, canvas.width * 0.03) : 15;
+    ctx.font = `${hintSize}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
     ctx.fillText('⬅ Sol / Sağ ➡ ile seçim yap', cx, cy + 220);
 }
 
@@ -878,9 +891,10 @@ function updateSecondCrosswalk() {
 }
 
 // 2. Yaya geçidi karar penceresini çiz
-function drawSecondDecisionWindow() {
+function drawGenericDecisionWindow(leftTitle, leftSubtitle, leftList, leftColor, rightTitle, rightSubtitle, rightList, rightColor) {
     const cx = canvas.width / 2;
     const cy = canvas.height / 2;
+    const isMobile = canvas.width < 600;
 
     // Arka plan karartma
     ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
@@ -891,27 +905,37 @@ function drawSecondDecisionWindow() {
     ctx.textBaseline = 'alphabetic';
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = '600 34px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    const titleSize = isMobile ? Math.max(20, canvas.width * 0.06) : 34;
+    ctx.font = `600 ${titleSize}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
     ctx.fillText('Otonom Araç   Fren Arızası', cx, cy - 200);
 
     ctx.fillStyle = '#d1d5db';
-    ctx.font = '18px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    const subtitleSize = isMobile ? Math.max(14, canvas.width * 0.04) : 18;
+    ctx.font = `${subtitleSize}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
     ctx.fillText('Araç duramıyor. Bir karar vermelisin.', cx, cy - 160);
 
     // Kart ölçüleri
-    const cardW = Math.min(520, Math.max(320, canvas.width * 0.32));
-    const cardH = 300;
-    const gap = Math.min(100, Math.max(40, canvas.width * 0.06));
+    let cardW, cardH, gap;
+    if (isMobile) {
+        cardW = Math.min(canvas.width * 0.45, 280);
+        cardH = Math.min(canvas.height * 0.35, 250);
+        gap = canvas.width * 0.04;
+    } else {
+        cardW = Math.min(520, Math.max(320, canvas.width * 0.32));
+        cardH = 300;
+        gap = Math.min(100, Math.max(40, canvas.width * 0.06));
+    }
 
     drawChoiceCard(
         cx - cardW - gap / 2,
         cy - cardH / 2,
         cardW,
         cardH,
-        'Sol Taraf',
-        'Hayvan ve insanlar',
-        ['🐱 🐱 🐱 3 kedi', '🐕 🐕 2 köpek'],
-        '#16a34a'
+        leftTitle,
+        leftSubtitle,
+        leftList,
+        leftColor,
+        isMobile
     );
 
     drawChoiceCard(
@@ -919,20 +943,35 @@ function drawSecondDecisionWindow() {
         cy - cardH / 2,
         cardW,
         cardH,
+        rightTitle,
+        rightSubtitle,
+        rightList,
+        rightColor,
+        isMobile
+    );
+
+    // Alt ipucu
+    ctx.fillStyle = '#9ca3af';
+    const hintSize = isMobile ? Math.max(12, canvas.width * 0.03) : 15;
+    ctx.font = `${hintSize}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+    ctx.fillText('⬅ Sol / Sağ ➡ ile seçim yap', cx, cy + 220);
+}
+
+function drawSecondDecisionWindow() {
+    drawGenericDecisionWindow(
+        'Sol Taraf',
+        'Hayvan ve insanlar',
+        ['🐱 🐱 🐱 3 kedi', '🐕 🐕 2 köpek'],
+        '#16a34a',
         'Sağ Taraf',
         'İnsan hayatlar',
         ['👩 👩 2 iri kadın', '👨 👨 2 yönetici', '🧑‍💼 1 evsiz'],
         '#dc2626'
     );
-
-    // Alt ipucu
-    ctx.fillStyle = '#9ca3af';
-    ctx.font = '15px system-ui, -apple-system, Segoe UI, Roboto, Arial';
-    ctx.fillText('⬅ Sol / Sağ ➡ ile seçim yap', cx, cy + 220);
 }
 
-// Seçenek kartı çiz (modern card)
-function drawChoiceCard(x, y, w, h, title, subtitle, list, accent) {
+// Seçenek kartı çiz (modern card) - Mobile responsive
+function drawChoiceCard(x, y, w, h, title, subtitle, list, accent, isMobile = false) {
     // Gölge
     ctx.save();
     ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
@@ -951,21 +990,24 @@ function drawChoiceCard(x, y, w, h, title, subtitle, list, accent) {
 
     // Başlık
     ctx.fillStyle = '#ffffff';
-    ctx.font = '600 26px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    const titleSize = isMobile ? Math.max(18, w * 0.12) : 26;
+    ctx.font = `600 ${titleSize}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
     ctx.textAlign = 'center';
-    ctx.fillText(title, x + w / 2, y + 60);
+    ctx.fillText(title, x + w / 2, y + h * 0.2);
 
     // Alt başlık
     ctx.fillStyle = '#9ca3af';
-    ctx.font = '16px system-ui, -apple-system, Segoe UI, Roboto, Arial';
-    ctx.fillText(subtitle, x + w / 2, y + 92);
+    const subtitleSize = isMobile ? Math.max(12, w * 0.08) : 16;
+    ctx.font = `${subtitleSize}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+    ctx.fillText(subtitle, x + w / 2, y + h * 0.35);
 
     // Liste
     ctx.fillStyle = '#e5e7eb';
-    ctx.font = '20px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    const listSize = isMobile ? Math.max(12, w * 0.09) : 20;
+    ctx.font = `${listSize}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
 
-    const startY = y + 150;
-    const lineH = 38;
+    const startY = y + h * 0.5;
+    const lineH = h * 0.2;
 
     list.forEach((item, i) => {
         ctx.fillText(item, x + w / 2, startY + i * lineH);
@@ -1230,52 +1272,16 @@ function updateThirdCrosswalk() {
 }
 
 function drawThirdDecisionWindow() {
-    const cx = canvas.width / 2;
-    const cy = canvas.height / 2;
-
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'alphabetic';
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '600 34px system-ui, -apple-system, Segoe UI, Roboto, Arial';
-    ctx.fillText('Otonom Araç Fren Arızası', cx, cy - 200);
-
-    ctx.fillStyle = '#d1d5db';
-    ctx.font = '18px system-ui, -apple-system, Segoe UI, Roboto, Arial';
-    ctx.fillText('Araç duramıyor. Bir karar vermelisin.', cx, cy - 160);
-
-    const cardW = Math.min(520, Math.max(320, canvas.width * 0.32));
-    const cardH = 300;
-    const gap = Math.min(100, Math.max(40, canvas.width * 0.06));
-
-    drawChoiceCard(
-        cx - cardW - gap / 2,
-        cy - cardH / 2,
-        cardW,
-        cardH,
+    drawGenericDecisionWindow(
         'Sol Taraf',
         'Beton bariyere çarpar',
         ['🚗 Araç içinde', '👧 Kız çocuk zarar görecek'],
-        '#e74c3c'
-    );
-
-    drawChoiceCard(
-        cx + gap / 2,
-        cy - cardH / 2,
-        cardW,
-        cardH,
+        '#e74c3c',
         'Sağ Taraf',
         'Yaya geçidi',
         ['👦 Erkek çocuk zarar görecek'],
         '#3b82f6'
     );
-
-    ctx.fillStyle = '#9ca3af';
-    ctx.font = '15px system-ui, -apple-system, Segoe UI, Roboto, Arial';
-    ctx.fillText('⬅ Sol / Sağ ➡ ile seçim yap', cx, cy + 220);
 }
 
 // 4. YAA GEÇİDİ FONKSIYONLARI
@@ -1342,52 +1348,16 @@ function updateFourthCrosswalk() {
 }
 
 function drawFourthDecisionWindow() {
-    const cx = canvas.width / 2;
-    const cy = canvas.height / 2;
-
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'alphabetic';
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '600 34px system-ui, -apple-system, Segoe UI, Roboto, Arial';
-    ctx.fillText('Otonom Araç Fren Arızası', cx, cy - 200);
-
-    ctx.fillStyle = '#d1d5db';
-    ctx.font = '18px system-ui, -apple-system, Segoe UI, Roboto, Arial';
-    ctx.fillText('Araç duramıyor. Bir karar vermelisin.', cx, cy - 160);
-
-    const cardW = Math.min(520, Math.max(320, canvas.width * 0.32));
-    const cardH = 300;
-    const gap = Math.min(100, Math.max(40, canvas.width * 0.06));
-
-    drawChoiceCard(
-        cx - cardW - gap / 2,
-        cy - cardH / 2,
-        cardW,
-        cardH,
+    drawGenericDecisionWindow(
         'Sol Taraf',
         'Yaşlı yayalar',
         ['👴 👴 2 yaşlı erkek', '👵 1 yaşlı kadın'],
-        '#6366f1'
-    );
-
-    drawChoiceCard(
-        cx + gap / 2,
-        cy - cardH / 2,
-        cardW,
-        cardH,
+        '#6366f1',
         'Sağ Taraf',
         'Çocuklar ve yetişkin',
         ['👧 1 kız çocuk', '👦 1 erkek çocuk', '👨 1 adam'],
         '#ec4899'
     );
-
-    ctx.fillStyle = '#9ca3af';
-    ctx.font = '15px system-ui, -apple-system, Segoe UI, Roboto, Arial';
-    ctx.fillText('⬅ Sol / Sağ ➡ ile seçim yap', cx, cy + 220);
 }
 
 // 5. YAA GEÇİDİ FONKSIYONLARI
@@ -1454,52 +1424,16 @@ function updateFifthCrosswalk() {
 }
 
 function drawFifthDecisionWindow() {
-    const cx = canvas.width / 2;
-    const cy = canvas.height / 2;
-
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'alphabetic';
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '600 34px system-ui, -apple-system, Segoe UI, Roboto, Arial';
-    ctx.fillText('Otonom Araç Fren Arızası', cx, cy - 200);
-
-    ctx.fillStyle = '#d1d5db';
-    ctx.font = '18px system-ui, -apple-system, Segoe UI, Roboto, Arial';
-    ctx.fillText('Araç duramıyor. Bir karar vermelisin.', cx, cy - 160);
-
-    const cardW = Math.min(520, Math.max(320, canvas.width * 0.32));
-    const cardH = 300;
-    const gap = Math.min(100, Math.max(40, canvas.width * 0.06));
-
-    drawChoiceCard(
-        cx - cardW - gap / 2,
-        cy - cardH / 2,
-        cardW,
-        cardH,
+    drawGenericDecisionWindow(
         'Sol Taraf',
         'Araçta Sporcular',
         ['🚗 2 erkek 2 kadın sporcu zarar görecek'],
-        '#8b5cf6'
-    );
-
-    drawChoiceCard(
-        cx + gap / 2,
-        cy - cardH / 2,
-        cardW,
-        cardH,
+        '#8b5cf6',
         'Sağ Taraf',
         'Kırmızı ışıkta geçenler',
         ['👨 1 erkek', '👩 👩 2 iri kadın zarar görecek'],
         '#f59e0b'
     );
-
-    ctx.fillStyle = '#9ca3af';
-    ctx.font = '15px system-ui, -apple-system, Segoe UI, Roboto, Arial';
-    ctx.fillText('⬅ Sol / Sağ ➡ ile seçim yap', cx, cy + 220);
 }
 
 // 6. YAA GEÇİDİ FONKSIYONLARI
@@ -1583,52 +1517,16 @@ function updateSixthCrosswalk() {
 }
 
 function drawSixthDecisionWindow() {
-    const cx = canvas.width / 2;
-    const cy = canvas.height / 2;
-
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'alphabetic';
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '600 34px system-ui, -apple-system, Segoe UI, Roboto, Arial';
-    ctx.fillText('Otonom Araç Fren Arızası', cx, cy - 200);
-
-    ctx.fillStyle = '#d1d5db';
-    ctx.font = '18px system-ui, -apple-system, Segoe UI, Roboto, Arial';
-    ctx.fillText('Araç duramıyor. Bir karar vermelisin.', cx, cy - 160);
-
-    const cardW = Math.min(520, Math.max(320, canvas.width * 0.32));
-    const cardH = 300;
-    const gap = Math.min(100, Math.max(40, canvas.width * 0.06));
-
-    drawChoiceCard(
-        cx - cardW - gap / 2,
-        cy - cardH / 2,
-        cardW,
-        cardH,
+    drawGenericDecisionWindow(
         'Sol Taraf',
         'Karışık grup',
         ['👵 1 yaşlı kadın', '🔴 2 suçlu', '👦 1 erkek çocuk'],
-        '#a78bfa'
-    );
-
-    drawChoiceCard(
-        cx + gap / 2,
-        cy - cardH / 2,
-        cardW,
-        cardH,
+        '#a78bfa',
         'Sağ Taraf',
         'Yaşlı ve suçlu',
         ['👵 1 yaşlı kadın', '🔴 1 suçlu zarar görecek'],
         '#06b6d4'
     );
-
-    ctx.fillStyle = '#9ca3af';
-    ctx.font = '15px system-ui, -apple-system, Segoe UI, Roboto, Arial';
-    ctx.fillText('⬅ Sol / Sağ ➡ ile seçim yap', cx, cy + 220);
 }
 
 // Bitiş çizgisini çiz
