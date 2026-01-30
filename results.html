@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Oyun Sonuçları</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.6s ease;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 3em;
+            color: #333;
+            margin-bottom: 10px;
+            animation: fadeIn 0.8s ease 0.3s backwards;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+            animation: fadeIn 0.8s ease 0.5s backwards;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        .scenarios-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .scenario-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 4px solid #667eea;
+            animation: slideIn 0.6s ease backwards;
+        }
+        
+        .scenario-card:nth-child(1) { animation-delay: 0.4s; }
+        .scenario-card:nth-child(2) { animation-delay: 0.5s; }
+        .scenario-card:nth-child(3) { animation-delay: 0.6s; }
+        .scenario-card:nth-child(4) { animation-delay: 0.7s; }
+        .scenario-card:nth-child(5) { animation-delay: 0.8s; }
+        .scenario-card:nth-child(6) { animation-delay: 0.9s; }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .scenario-header {
+            margin-bottom: 15px;
+        }
+        
+        .scenario-header h3 {
+            color: #667eea;
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+        
+        .scenario-title {
+            color: #666;
+            font-size: 0.95em;
+            font-weight: 500;
+        }
+        
+        .scenario-content {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .choice-row {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .choice {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+        
+        .choice.selected {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .choice-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+            font-size: 0.95em;
+        }
+        
+        .emoji {
+            font-size: 1.2em;
+        }
+        
+        .stats-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .bar-bg {
+            flex: 1;
+            height: 24px;
+            background: #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .bar-fill {
+            height: 100%;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .percentage {
+            font-weight: bold;
+            min-width: 50px;
+            text-align: right;
+            color: #333;
+            font-size: 0.9em;
+        }
+        
+        .user-choice {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+        
+        .footer {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            animation: fadeIn 0.8s ease 1.2s backwards;
+        }
+        
+        button {
+            padding: 14px 40px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+        
+        .btn-play-again {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-play-again:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-home {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        
+        .btn-home:hover {
+            background: #f5f5f5;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .scenarios-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .footer {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏁 OYUN TAMAMLANDI!</h1>
+            <p>Tüm senaryolardaki seçimleriniz ve genel istatistikler</p>
+        </div>
+        
+        <div class="scenarios-grid" id="scenarios-container">
+            <!-- Senaryo kartları JavaScript ile doldurulacak -->
+        </div>
+        
+        <div class="footer">
+            <button class="btn-play-again" onclick="location.href='index.html'">🔄 Tekrar Oyna</button>
+            <button class="btn-home" onclick="location.href='index.html'">🏠 Ana Sayfa</button>
+        </div>
+    </div>
+    
+    <script>
+        // İstatistik verileri
+        const statsData = [
+            {
+                num: 1,
+                title: 'Kurallara Uyan vs Uymayan',
+                left: 'Kurallara Uyan zarar görür',
+                leftPercent: 16,
+                right: 'Kurallara Uymayan zarar görür',
+                rightPercent: 84
+            },
+            {
+                num: 2,
+                title: 'Hayvanlar vs İnsanlar',
+                left: 'Hayvanlar zarar görür',
+                leftPercent: 92.9,
+                right: 'İnsanlar zarar görür',
+                rightPercent: 7.1
+            },
+            {
+                num: 3,
+                title: 'Araçtaki Kız vs Yoldaki Erkek',
+                left: 'Araçtaki kız zarar görür',
+                leftPercent: 23,
+                right: 'Yoldaki erkek zarar görür',
+                rightPercent: 77
+            },
+            {
+                num: 4,
+                title: 'Yaşlılar vs Gençler',
+                left: 'Yaşlılar zarar görür',
+                leftPercent: 99,
+                right: 'Gençler zarar görür',
+                rightPercent: 1
+            },
+            {
+                num: 5,
+                title: 'Araçtaki Sporcular vs Yoldaki Bireyler',
+                left: 'Araçtaki sporcular zarar görür',
+                leftPercent: 6,
+                right: 'Yoldaki iri bireyler zarar görür',
+                rightPercent: 94
+            },
+            {
+                num: 6,
+                title: 'Araçtaki 5 Kişi vs 2 Yaya',
+                left: 'Araçtaki 5 kişi zarar görür',
+                leftPercent: 4,
+                right: '2 Yaya zarar görür',
+                rightPercent: 96
+            }
+        ];
+        
+        // localStorage'dan kararları yükle
+        const decisions = JSON.parse(localStorage.getItem('gameDecisions') || '[]');
+        const container = document.getElementById('scenarios-container');
+        
+        // Her senaryo kartını oluştur
+        statsData.forEach((stat, idx) => {
+            const decision = decisions[idx];
+            const playerChoice = decision ? decision.decision : null;
+            
+            const leftBarColor = playerChoice === 'left' ? '#4CAF50' : '#90EE90';
+            const rightBarColor = playerChoice === 'right' ? '#f44336' : '#ffcdd2';
+            
+            const card = document.createElement('div');
+            card.className = 'scenario-card';
+            card.innerHTML = `
+                <div class="scenario-header">
+                    <h3>Senaryo ${stat.num}</h3>
+                    <span class="scenario-title">${stat.title}</span>
+                </div>
+                
+                <div class="scenario-content">
+                    <div class="choice-row">
+                        <div class="choice ${playerChoice === 'left' ? 'selected' : ''}">
+                            <div class="choice-label">
+                                <span class="emoji">⬅️</span>
+                                <span>${stat.left}</span>
+                            </div>
+                            <div class="stats-bar">
+                                <div class="bar-bg">
+                                    <div class="bar-fill" style="width: ${stat.leftPercent}%; background-color: ${leftBarColor};"></div>
+                                </div>
+                                <span class="percentage">${stat.leftPercent}%</span>
+                            </div>
+                            ${playerChoice === 'left' ? '<div class="user-choice">SİZİN SEÇİMİNİZ</div>' : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="choice-row">
+                        <div class="choice ${playerChoice === 'right' ? 'selected' : ''}">
+                            <div class="choice-label">
+                                <span class="emoji">➡️</span>
+                                <span>${stat.right}</span>
+                            </div>
+                            <div class="stats-bar">
+                                <div class="bar-bg">
+                                    <div class="bar-fill" style="width: ${stat.rightPercent}%; background-color: ${rightBarColor};"></div>
+                                </div>
+                                <span class="percentage">${stat.rightPercent}%</span>
+                            </div>
+                            ${playerChoice === 'right' ? '<div class="user-choice">SİZİN SEÇİMİNİZ</div>' : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    </script>
+</body>
+</html>
