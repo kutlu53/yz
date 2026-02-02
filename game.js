@@ -150,7 +150,10 @@ window.addEventListener('keydown', (e) => {
     keys[e.key] = true;
 
     if (game.decisionWindowOpen) {
-        if (e.key === 'ArrowLeft') {
+        // Bu geçit için zaten karar verildiyse yoksay
+        const alreadyDecided = game.crosswalkDecisions.some(d => d.number === game.crosswalkNumber);
+        
+        if (e.key === 'ArrowLeft' && !alreadyDecided) {
             game.targetLane = 0; // Sol şerit seç (kurallı)
             game.decision = 'left';
             game.decisionWindowOpen = false;
@@ -162,7 +165,7 @@ window.addEventListener('keydown', (e) => {
             });
             e.preventDefault();
         }
-        if (e.key === 'ArrowRight') {
+        if (e.key === 'ArrowRight' && !alreadyDecided) {
             game.targetLane = 1; // Sağ şerit seç (risky)
             game.decision = 'right';
             game.decisionWindowOpen = false;
@@ -195,15 +198,67 @@ window.addEventListener('keyup', (e) => {
 // MOBIL KONTROLLER - Touch Events
 let touchStartX = 0;
 let touchEndX = 0;
+let touchStartY = 0;
+let touchEndY = 0;
 
 document.addEventListener('touchstart', (e) => {
     touchStartX = e.changedTouches[0].screenX;
+    touchStartY = e.changedTouches[0].screenY;
 }, false);
 
 document.addEventListener('touchend', (e) => {
     touchEndX = e.changedTouches[0].screenX;
-    handleSwipe();
+    touchEndY = e.changedTouches[0].screenY;
+    
+    // Karar penceresi açıksa, dokunma pozisyonuna göre seçim yap
+    if (game.decisionWindowOpen) {
+        handleTapDecision(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+    } else {
+        handleSwipe();
+    }
 }, false);
+
+// Dokunma ile karar seçimi (kutucuklara dokunma)
+function handleTapDecision(tapX, tapY) {
+    const swipeThreshold = 30;
+    const diffX = Math.abs(touchStartX - touchEndX);
+    const diffY = Math.abs(touchStartY - touchEndY);
+    
+    // Eğer kaydırma (swipe) yapıldıysa, kaydırma işlemini kullan
+    if (diffX > swipeThreshold || diffY > swipeThreshold) {
+        handleSwipe();
+        return;
+    }
+    
+    // Bu geçit için zaten karar verildiyse yoksay
+    const alreadyDecided = game.crosswalkDecisions.some(d => d.number === game.crosswalkNumber);
+    if (alreadyDecided) return;
+    
+    // Dokunma (tap) - ekranın sol veya sağ yarısına göre karar ver
+    const screenCenterX = window.innerWidth / 2;
+    
+    if (tapX < screenCenterX) {
+        // Sol tarafa dokunuldu - Sol seçim
+        game.targetLane = 0;
+        game.decision = 'left';
+        game.decisionWindowOpen = false;
+        game.crosswalkDecisions.push({
+            number: game.crosswalkNumber,
+            lane: game.selectedLane,
+            decision: 'left'
+        });
+    } else {
+        // Sağ tarafa dokunuldu - Sağ seçim
+        game.targetLane = 1;
+        game.decision = 'right';
+        game.decisionWindowOpen = false;
+        game.crosswalkDecisions.push({
+            number: game.crosswalkNumber,
+            lane: game.selectedLane,
+            decision: 'right'
+        });
+    }
+}
 
 function handleSwipe() {
     const swipeThreshold = 50; // Minimum swipe mesafesi
@@ -215,9 +270,14 @@ function handleSwipe() {
         return;
     }
 
+    // Karar penceresi açıkken kaydırma ile de seçim yapılabilir
     if (game.decisionWindowOpen && Math.abs(diff) > swipeThreshold) {
+        // Bu geçit için zaten karar verildiyse yoksay
+        const alreadyDecided = game.crosswalkDecisions.some(d => d.number === game.crosswalkNumber);
+        if (alreadyDecided) return;
+        
         if (diff > 0) {
-            // Sağa kaydırma = Sol seçim (Arrow Left)
+            // Sola kaydırma = Sol seçim
             game.targetLane = 0;
             game.decision = 'left';
             game.decisionWindowOpen = false;
@@ -227,7 +287,7 @@ function handleSwipe() {
                 decision: 'left'
             });
         } else {
-            // Sola kaydırma = Sağ seçim (Arrow Right)
+            // Sağa kaydırma = Sağ seçim
             game.targetLane = 1;
             game.decision = 'right';
             game.decisionWindowOpen = false;
@@ -239,12 +299,12 @@ function handleSwipe() {
         }
     } else if (!game.decisionWindowOpen && Math.abs(diff) > swipeThreshold) {
         if (diff > 0) {
-            // Sağa kaydırma = Sol şerit
+            // Sola kaydırma = Sol şerit
             if (game.targetLane > 0) {
                 game.targetLane--;
             }
         } else {
-            // Sola kaydırma = Sağ şerit
+            // Sağa kaydırma = Sağ şerit
             if (game.targetLane < 1) {
                 game.targetLane++;
             }
@@ -381,6 +441,17 @@ function updateSpeed() {
         // 1. Yaya geçidi geçildi - 2. geçidiyi başlatma saati kaydet
         if (game.secondCrosswalkStartTime === null) {
             game.secondCrosswalkStartTime = Date.now();
+            
+            // Eğer karar verilmediyse, aracın şeridine göre otomatik karar kaydet
+            const alreadyDecided = game.crosswalkDecisions.some(d => d.number === 1);
+            if (!alreadyDecided) {
+                const autoDecision = game.carLane === 0 ? 'left' : 'right';
+                game.crosswalkDecisions.push({
+                    number: 1,
+                    lane: game.carLane,
+                    decision: autoDecision
+                });
+            }
         }
         game.crosswalkTriggered = false;
         game.crosswalkEncountered = false;
@@ -879,7 +950,16 @@ function updateSecondCrosswalk() {
         game.speed = BASE_SPEED;
         game.timeSlowFactor = 1;
     } else if (game.crosswalk2Y >= canvas.height) {
-        // 2. Yaya geçidi geçildi
+        // 2. Yaya geçidi geçildi - otomatik karar kaydet
+        const alreadyDecided = game.crosswalkDecisions.some(d => d.number === 2);
+        if (!alreadyDecided) {
+            const autoDecision = game.carLane === 0 ? 'left' : 'right';
+            game.crosswalkDecisions.push({
+                number: 2,
+                lane: game.carLane,
+                decision: autoDecision
+            });
+        }
         game.crosswalk2Triggered = false;
         game.decision = null;
         game.speed = BASE_SPEED;
@@ -964,11 +1044,11 @@ function drawGenericDecisionWindow(leftTitle, leftSubtitle, leftList, leftColor,
 function drawSecondDecisionWindow() {
     drawGenericDecisionWindow(
         'Sol Taraf',
-        'Hayvan ve insanlar',
+        'Hayvan Hayatı',
         ['🐱 🐱 🐱 3 kedi', '🐕 🐕 2 köpek'],
         '#16a34a',
         'Sağ Taraf',
-        'İnsan hayatlar',
+        'İnsan Hayatı',
         ['👩 👩 2 iri kadın', '👨 👨 2 yönetici', '🧑‍💼 1 evsiz'],
         '#dc2626'
     );
@@ -1265,6 +1345,16 @@ function updateThirdCrosswalk() {
         game.speed = BASE_SPEED;
         game.timeSlowFactor = 1;
     } else if (game.crosswalk3Y >= canvas.height) {
+        // 3. Yaya geçidi geçildi - otomatik karar kaydet
+        const alreadyDecided = game.crosswalkDecisions.some(d => d.number === 3);
+        if (!alreadyDecided) {
+            const autoDecision = game.carLane === 0 ? 'left' : 'right';
+            game.crosswalkDecisions.push({
+                number: 3,
+                lane: game.carLane,
+                decision: autoDecision
+            });
+        }
         game.crosswalk3Triggered = false;
         game.decision = null;
         game.speed = BASE_SPEED;
@@ -1341,6 +1431,16 @@ function updateFourthCrosswalk() {
         game.speed = BASE_SPEED;
         game.timeSlowFactor = 1;
     } else if (game.crosswalk4Y >= canvas.height) {
+        // 4. Yaya geçidi geçildi - otomatik karar kaydet
+        const alreadyDecided = game.crosswalkDecisions.some(d => d.number === 4);
+        if (!alreadyDecided) {
+            const autoDecision = game.carLane === 0 ? 'left' : 'right';
+            game.crosswalkDecisions.push({
+                number: 4,
+                lane: game.carLane,
+                decision: autoDecision
+            });
+        }
         game.crosswalk4Triggered = false;
         game.decision = null;
         game.speed = BASE_SPEED;
@@ -1354,11 +1454,11 @@ function updateFourthCrosswalk() {
 function drawFourthDecisionWindow() {
     drawGenericDecisionWindow(
         'Sol Taraf',
-        'Yaşlı yayalar',
+        'Yaşlı Yayalar',
         ['👴 👴 2 yaşlı erkek', '👵 1 yaşlı kadın'],
         '#6366f1',
         'Sağ Taraf',
-        'Çocuklar ve yetişkin',
+        'Genç Yayalar',
         ['👧 1 kız çocuk', '👦 1 erkek çocuk', '👨 1 adam'],
         '#ec4899'
     );
@@ -1417,6 +1517,16 @@ function updateFifthCrosswalk() {
         game.speed = BASE_SPEED;
         game.timeSlowFactor = 1;
     } else if (game.crosswalk5Y >= canvas.height) {
+        // 5. Yaya geçidi geçildi - otomatik karar kaydet
+        const alreadyDecided = game.crosswalkDecisions.some(d => d.number === 5);
+        if (!alreadyDecided) {
+            const autoDecision = game.carLane === 0 ? 'left' : 'right';
+            game.crosswalkDecisions.push({
+                number: 5,
+                lane: game.carLane,
+                decision: autoDecision
+            });
+        }
         game.crosswalk5Triggered = false;
         game.decision = null;
         game.speed = BASE_SPEED;
@@ -1430,12 +1540,12 @@ function updateFifthCrosswalk() {
 function drawFifthDecisionWindow() {
     drawGenericDecisionWindow(
         'Sol Taraf',
-        'Araçta Sporcular',
-        ['🚗 2 erkek 2 kadın sporcu zarar görecek'],
+        'Fit Olanlar (Araçta)',
+        ['🏃‍♂️ 🏃‍♂️ 2 erkek sporcu', '🏃‍♀️ 🏃‍♀️ 2 kadın sporcu'],
         '#8b5cf6',
         'Sağ Taraf',
-        'Kırmızı ışıkta geçenler',
-        ['👨 1 erkek', '👩 👩 2 iri kadın zarar görecek'],
+        'Fit Olmayanlar (Yayalar)',
+        ['👨 1 erkek', '👩 👩 2 iri kadın', '👨 1 iri erkek'],
         '#f59e0b'
     );
 }
@@ -1510,6 +1620,16 @@ function updateSixthCrosswalk() {
         game.speed = BASE_SPEED;
         game.timeSlowFactor = 1;
     } else if (game.crosswalk6Y >= canvas.height) {
+        // 6. Yaya geçidi geçildi - otomatik karar kaydet
+        const alreadyDecided = game.crosswalkDecisions.some(d => d.number === 6);
+        if (!alreadyDecided) {
+            const autoDecision = game.carLane === 0 ? 'left' : 'right';
+            game.crosswalkDecisions.push({
+                number: 6,
+                lane: game.carLane,
+                decision: autoDecision
+            });
+        }
         game.crosswalk6Triggered = false;
         game.decision = null;
         game.speed = BASE_SPEED;
@@ -1523,12 +1643,12 @@ function updateSixthCrosswalk() {
 function drawSixthDecisionWindow() {
     drawGenericDecisionWindow(
         'Sol Taraf',
-        'Karışık grup',
-        ['👵 1 yaşlı kadın', '🔴 2 suçlu', '👦 1 erkek çocuk'],
+        'Çoğunluk (5 Kişi)',
+        ['👵 👵 2 yaşlı kadın', '🔴 🔴 2 suçlu', '👦 1 erkek çocuk'],
         '#a78bfa',
         'Sağ Taraf',
-        'Yaşlı ve suçlu',
-        ['👵 1 yaşlı kadın', '🔴 1 suçlu zarar görecek'],
+        'Azınlık (2 Kişi)',
+        ['👵 1 yaşlı kadın', '🔴 1 suçlu'],
         '#06b6d4'
     );
 }
