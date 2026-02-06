@@ -31,8 +31,8 @@ const ROAD_WIDTH = 200;
 const LANE_WIDTH = ROAD_WIDTH / 2;
 const CAR_WIDTH = 40;
 const CAR_HEIGHT = 60;
-const BASE_SPEED = 4;
-const MAX_SPEED = 6;
+const BASE_SPEED = 6;
+const MAX_SPEED = 8;
 const MIN_SPEED = 0.2;
 
 // Yaya geçidi parametreleri
