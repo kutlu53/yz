@@ -464,13 +464,7 @@ function updateSpeed() {
     }
     
     // 2. Yaya geçidini 3 saniye sonra harekete geçir
-    if (game.secondCrosswalkStartTime !== null) {
-        const elapsed = Date.now() - game.secondCrosswalkStartTime;
-        if (elapsed >= CROSSWALK2_DELAY) {
-            // 2. geçidi harekete geçir
-            game.crosswalk2Y += game.speed * game.timeSlowFactor;
-        }
-    }
+    // NOT: Bu hareket artık gameLoop içinde frameMultiplier ile yapılıyor
 
     // Hızı sınırla
     game.speed = Math.max(MIN_SPEED, Math.min(MAX_SPEED, game.speed));
@@ -1130,16 +1124,28 @@ function updateUI() {
     document.getElementById('speedBar').style.width = speedPercentage + '%';
 }
 
+// Delta time için son zaman damgası
+let lastFrameTime = 0;
+const TARGET_FPS = 60; // Hedef FPS (tüm cihazlarda tutarlı hız için)
+
 // Ana oyun döngüsü
-function gameLoop() {
-    // Yol hareketini güncelle
-    game.roadOffset += game.speed * game.timeSlowFactor;
+function gameLoop(currentTime) {
+    // Delta time hesapla (milisaniye -> saniye)
+    if (lastFrameTime === 0) lastFrameTime = currentTime;
+    const deltaTime = (currentTime - lastFrameTime) / 1000; // saniye cinsinden
+    lastFrameTime = currentTime;
+    
+    // FPS'den bağımsız hız çarpanı (60 FPS baz alınarak)
+    const frameMultiplier = deltaTime * TARGET_FPS;
+    
+    // Yol hareketini güncelle (FPS bağımsız)
+    game.roadOffset += game.speed * game.timeSlowFactor * frameMultiplier;
 
     // Mesafeyi güncelle
-    game.distance += game.speed;
+    game.distance += game.speed * frameMultiplier;
 
     // Yaya geçidini yaklaştır (aşağıya doğru hareket)
-    game.crosswalkY += game.speed * game.timeSlowFactor;
+    game.crosswalkY += game.speed * game.timeSlowFactor * frameMultiplier;
     
     // 1. geçidi geçtikten sonra 3 saniye sonra 2. geçidi başlat
     if (game.crosswalkNumber === 1 && game.crosswalkY > canvas.height + 50) {
@@ -1153,7 +1159,7 @@ function gameLoop() {
     if (game.secondCrosswalkStartTime) {
         const elapsed = Date.now() - game.secondCrosswalkStartTime;
         if (elapsed >= 3000) {
-            game.crosswalk2Y += game.speed * game.timeSlowFactor;
+            game.crosswalk2Y += game.speed * game.timeSlowFactor * frameMultiplier;
         }
     }
     
@@ -1166,7 +1172,7 @@ function gameLoop() {
     if (game.crosswalk3StartTime) {
         const elapsed = Date.now() - game.crosswalk3StartTime;
         if (elapsed >= 3000) {
-            game.crosswalk3Y += game.speed * game.timeSlowFactor;
+            game.crosswalk3Y += game.speed * game.timeSlowFactor * frameMultiplier;
         }
     }
     
@@ -1179,7 +1185,7 @@ function gameLoop() {
     if (game.crosswalk4StartTime) {
         const elapsed = Date.now() - game.crosswalk4StartTime;
         if (elapsed >= 3000) {
-            game.crosswalk4Y += game.speed * game.timeSlowFactor;
+            game.crosswalk4Y += game.speed * game.timeSlowFactor * frameMultiplier;
         }
     }
     
@@ -1192,7 +1198,7 @@ function gameLoop() {
     if (game.crosswalk5StartTime) {
         const elapsed = Date.now() - game.crosswalk5StartTime;
         if (elapsed >= 3000) {
-            game.crosswalk5Y += game.speed * game.timeSlowFactor;
+            game.crosswalk5Y += game.speed * game.timeSlowFactor * frameMultiplier;
         }
     }
     
@@ -1205,7 +1211,7 @@ function gameLoop() {
     if (game.crosswalk6StartTime) {
         const elapsed = Date.now() - game.crosswalk6StartTime;
         if (elapsed >= 3000) {
-            game.crosswalk6Y += game.speed * game.timeSlowFactor;
+            game.crosswalk6Y += game.speed * game.timeSlowFactor * frameMultiplier;
         }
     }
     
@@ -1218,7 +1224,7 @@ function gameLoop() {
     if (game.finishLineStartTime) {
         const elapsed = Date.now() - game.finishLineStartTime;
         if (elapsed >= 3000) {
-            game.finishLineY += game.speed * game.timeSlowFactor;
+            game.finishLineY += game.speed * game.timeSlowFactor * frameMultiplier;
         }
     }
 
@@ -2086,7 +2092,11 @@ window.addEventListener('load', function() {
     // Ekran yönüne kilitlenme (landscape)
     lockScreenOrientation();
     
-    gameLoop();
+    // Delta time için ilk zaman damgasını sıfırla
+    lastFrameTime = 0;
+    
+    // Oyun döngüsünü başlat (requestAnimationFrame timestamp verir)
+    requestAnimationFrame(gameLoop);
 });
 
 // Tam ekran iste
